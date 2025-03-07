@@ -61,6 +61,11 @@ General Chatbot Guidelines:
 - Maintain clear, friendly, and professional communication.
 - Redirect complex queries to Ivy Homes representatives for detailed assistance.
 
+Engagement Model:
+
+- Sell to Ivy - units that are owned by Ivy homes. basically, we have done MoU or ATS with the owner and have exclusive rights over the apartment
+- Sell with Ivy - units that Ivy homes does not own and we are working on a brokerage model. We charge 1% from the buyer for the a successful transaction
+
 ## Ivy homes description for Media: ##
 
 Ivy Homes is a realty tech start-up redefining how people buy and sell homes. The product is a merger of traditional real estate maturity and cutting-edge technology. With the power of machine learning and engineering, we have a unique advantage that no other company in real estate has.
