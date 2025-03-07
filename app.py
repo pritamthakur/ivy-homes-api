@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from openai import OpenAI
+import openai
 import requests
 import os
 
@@ -17,8 +17,11 @@ def fetch_properties():
 with open("memory.txt", "r") as file:
     memory_content = file.read()
 
-# Initialize OpenAI client with API key
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# Load your API key from Render environment variable
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
+# Store chat history
+chat_history = []
 
 @app.route('/chat', methods=['POST'])
 def chat():
@@ -46,7 +49,7 @@ def chat():
         "formal": "You're formal, polite, professional, and helpful. Provide clear, concise, and professional responses."
     }
 
-    # Construct system message
+    # Pass context and clearly instruct GPT-4o
     full_system_message = (
         f"{system_prompts.get(personality, 'formal')}\n\n"
         f"{memory_content}\n\n"
@@ -54,15 +57,22 @@ def chat():
         "Use the above details to specifically answer queries about available properties, prices, and locations."
     )
 
-    response = client.chat.completions.create(
+    # Append current user message to chat history
+    chat_history.append({"role": "user", "content": user_message})
+
+    # Generate response including conversation history
+    messages = [{"role": "system", "content": full_system_message}] + chat_history
+
+    response = openai.ChatCompletion.create(
         model="gpt-4o",
-        messages=[
-            {"role": "system", "content": full_system_message},
-            {"role": "user", "content": user_message}
-        ]
+        messages=messages
     )
 
     reply = response.choices[0].message.content
+
+    # Append assistant reply to chat history
+    chat_history.append({"role": "assistant", "content": reply})
+
     return jsonify({"reply": reply})
 
 if __name__ == '__main__':
