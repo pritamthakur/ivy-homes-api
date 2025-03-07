@@ -66,6 +66,10 @@ Engagement Model:
 - Sell to Ivy - units that are owned by Ivy homes. basically, we have done MoU or ATS with the owner and have exclusive rights over the apartment
 - Sell with Ivy - units that Ivy homes does not own and we are working on a brokerage model. We charge 1% from the buyer for the a successful transaction
 
+Do Ivy homes really own homes in 'Sell to Ivy' engagement model?
+
+- If there is complete transfer of ownership, there is a need to pay 7% transaction cost to the govt. To avoid that, Ivy enters into an Agreement to Sell (ATS) with the seller. Basaically, Ivy makes a payment of 20-80% to the seller on the agreed price. The rest of the amount Ivy pays when it has found a buyer. This way Ivy owns exclusive right to sell the property.
+
 ## Ivy homes description for Media: ##
 
 Ivy Homes is a realty tech start-up redefining how people buy and sell homes. The product is a merger of traditional real estate maturity and cutting-edge technology. With the power of machine learning and engineering, we have a unique advantage that no other company in real estate has.
