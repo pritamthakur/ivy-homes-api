@@ -1,4 +1,74 @@
-Ivy Homes helps customers buy and sell properties easily.
-We have apartments in prime areas such as Whitefield, Sarjapur Road.
-We specialize in hassle-free transactions.
-Our properties range from ₹50 lakhs to ₹3 Cr.
+Ivy Homes - Buyer-Focused Chatbot Training Pointers
+
+Introduction:
+- Ivy Homes is a leading real estate platform in Bangalore, specializing in fully verified and certified properties.
+- Simplifies home-buying by offering reliable homes meeting rigorous quality standards.
+
+About Ivy Homes:
+- Headquarters: Hara Chambers #22, 4th Floor, KH Road, Bangalore 560027, Karnataka, India.
+- Full transparency and detailed certification reports provided with every listing.
+- Curated property listings ensuring genuine deals, eliminating typical real estate risks.
+
+Quality Standards:
+- Properties undergo a comprehensive 180-point quality inspection.
+- Detailed certification reports available for all listed homes.
+
+Buying Process:
+- Easily browse verified listings.
+- Conveniently schedule visits through Ivy Homes representatives.
+- Complete assistance in documentation, legal verifications, and transaction processes.
+
+Types of Properties Offered:
+- Ready-to-move-in apartments.
+- Premium resale homes in prime Bangalore localities.
+- Homes ranging from compact 2 BHKs to spacious 4 BHK apartments.
+
+Typical Amenities Offered:
+- Gym, clubhouse, swimming pools, gardens, and community facilities.
+- Premium and ready-to-move-in options available.
+
+Notable Projects:
+- Brigade Harmony (Thanisandra Main Road, 3 BHK)
+- Sobha Lake Gardens (KR Puram, 3 BHK)
+- Linea Sunflower (Kengeri, 3 & 4 BHK)
+- Prestige Lakeside Habitat (Varthur, 2 & 3 BHK)
+- Sobha Lake Gardens (KR Puram, 3 BHK)
+
+Home Loan and Financial Assistance:
+- Facilitates home loans through leading financial institutions.
+- End-to-end support for paperwork, loan processing, and registration.
+
+Customer Support:
+- Personalized guidance through dedicated Ivy Homes representatives.
+
+Frequently Asked Questions:
+1. "How to schedule a visit?"
+   Answer: Schedule directly through the chatbot or Ivy Homes website.
+
+2. "Can Ivy Homes assist with home loans?"
+   Answer: Yes, full assistance for home loans through partnered banks. We are connected with 10+ nationalised banks.
+
+3. "Are properties negotiable?"
+   Answer: Prices are typically market-aligned; however, budgets can be discussed with representatives.
+
+Key Benefits of Ivy Homes:
+- Transparent and trustworthy transactions.
+- Quick and seamless home buying process.
+- Fully inspected and certified properties to ensure peace of mind.
+- End-to-end support from browsing to registration.
+
+General Chatbot Guidelines:
+- Maintain clear, friendly, and professional communication.
+- Redirect complex queries to Ivy Homes representatives for detailed assistance.
+
+## Ivy homes description for Media: ##
+
+Ivy Homes is a realty tech start-up redefining how people buy and sell homes. The product is a merger of traditional real estate maturity and cutting-edge technology. With the power of machine learning and engineering, we have a unique advantage that no other company in real estate has.
+
+The problem Ivy Homes is trying to solve is the first of its kind in India; you’ll be in the front seat of disruption of real estate using AI/ML/software. With the help of AI & ML, Ivy Homes is using data from various channels across industries to predict the prices of an apartment.
+
+As a nextgen entity, Ivy Homes is building systems for handling millions of GBs of data which has to be safely stored over the years to find trends in the housing market.
+
+Our core team comprises IIT Kharagpur and IIT Kanpur alumni with excellent business and technology acumen. We are backed by marquee Venture Capitalists in the ecosystem, including Y-Combinator, Khosla Ventures, Global Founders Capital and Venture Highway. We are expanding our team and looking for enthusiastic people to join us on this journey.
+
+#### DETAILS ABOUT SOCIETY (to be used when asked) ####
