@@ -18,13 +18,12 @@ def fetch_properties():
 # Load memory from external memory.txt file
 def load_memory():
     with open("memory.txt", "r") as file:
-        memory = file.read()
-    return memory
+        return file.read().strip()
 
 # Set OpenAI API key from Render environment variables
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# Initial system prompts with more details
+# Personality prompts
 system_prompts = {
     "funny": "You are funny, humorous, playful, and outrageous. Use Indian context humor; say prices are over the roof!",
     "cranky": "You are cranky, irritated, sarcastic, and blunt. Use phrases like 'bhai khareedna hai toh batao'.",
@@ -40,36 +39,32 @@ def chat():
     properties = fetch_properties()
 
     formatted_properties = ""
-    if properties and properties.get("data"):
-        for prop in properties["data"]:
-            name = prop.get('property_title', 'Property Name')
+    if properties:
+        for prop in properties:
+            name = prop.get('property_title', 'Unnamed Property')
             locality = prop.get('project', {}).get('locality', 'Unknown location')
             price = prop.get('price')
-            formatted_price = f"₹{price:,}" if (price := prop.get('price')) else "Price not disclosed"
-            status = prop.get('property_status', 'Status unknown')
+            formatted_price = f"₹{price:,.0f}" if price else "Price not disclosed"
+            status = prop.get('property_status', 'Unknown status')
             url = prop.get('property_url', '#')
 
             formatted_properties += (
                 f"✨ **{name}**\n"
-                f"📍 Location: {locality}\n"
-                f"💰 Price: {formatted_price(price)}\n"
-                f"🚦 Status: {status}\n"
-                f"🔗 [Visit for More Details:]({url})\n\n"
+                f"📍 **Location:** {locality}\n"
+                f"💰 **Price:** {formatted_price}\n"
+                f"🚦 **Status:** {status}\n"
+                f"🔗 [View details]({url})\n\n"
             )
+    else:
+        formatted_properties = "Currently, no properties are available."
 
-    memory = ""
-    try:
-        with open('memory.txt', 'r') as file:
-            formatted_memory = file.read().strip()
-    except Exception as e:
-        formatted_properties += "Property details unavailable at the moment."
+    memory = load_memory()
 
-    # Enhanced system prompt including memory and property details
     full_system_prompt = (
         f"{system_prompts.get(personality, 'formal')}\n\n"
-        f"Memory Information:\n{open('memory.txt').read()}\n\n"
+        f"Memory Information:\n{memory}\n\n"
         f"Properties Available:\n{formatted_properties}\n\n"
-        f"Use above memory and properties to answer user questions."
+        "Use the above memory and property details to answer user questions clearly."
     )
 
     # Call GPT-4o model for generating replies
@@ -84,12 +79,6 @@ def chat():
     reply = response.choices[0].message.content
 
     return jsonify({"reply": reply})
-
-def formatted_price(price):
-    if price is None:
-        return "Price not disclosed"
-    else:
-        return f"₹{price:,.0f}"
 
 if __name__ == '__main__':
     app.run(debug=True)
