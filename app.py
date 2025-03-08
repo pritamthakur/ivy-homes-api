@@ -1,26 +1,35 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from openai import OpenAI
+import openai
 import requests
 import os
 
 app = Flask(__name__)
 CORS(app)
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-# Fetch properties data
+# Fetch properties data from the API
 def fetch_properties():
     url = "https://api.ivy.homes/api/v2/properties/?property_status=For%20Sale&property_status=Coming%20Soon"
     response = requests.get(url)
-    return response.json().get('data', [])
+    if response.status_code == 200:
+        return response.json().get("data", [])
+    return []
 
-# Load memory content
-with open("memory.txt", "r") as file:
-    memory_content = file.read()
+# Load memory from external memory.txt file
+def load_memory():
+    with open("memory.txt", "r") as file:
+        memory = file.read()
+    return memory
 
-# Store chat history globally
-chat_history = []
+# Set OpenAI API key from Render environment variables
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
+# Initial system prompts with more details
+system_prompts = {
+    "funny": "You are funny, humorous, playful, and outrageous. Use Indian context humor; say prices are over the roof!",
+    "cranky": "You are cranky, irritated, sarcastic, and blunt. Use phrases like 'bhai khareedna hai toh batao'.",
+    "formal": "You are formal, polite, professional, and helpful."
+}
 
 @app.route('/chat', methods=['POST'])
 def chat():
@@ -30,55 +39,57 @@ def chat():
 
     properties = fetch_properties()
 
-    # Prepare formatted property details
-property_details = "🏡 Available Properties:\n\n"
-for prop in properties:
-    name = prop.get('property_title', 'Unnamed')
-    locality = prop['project'].get('locality', 'Unknown locality')
-    price = f"₹{prop['price']:,}" if prop['price'] else "Price not disclosed"
-    status = prop.get('property_status', 'Status unknown')
-    url = prop.get('property_url', '#')
+    formatted_properties = ""
+    if properties and properties.get("data"):
+        for prop in properties["data"]:
+            name = prop.get('property_title', 'Property Name')
+            locality = prop.get('project', {}).get('locality', 'Unknown location')
+            price = prop.get('price')
+            formatted_price = f"₹{price:,}" if (price := prop.get('price')) else "Price not disclosed"
+            status = prop.get('property_status', 'Status unknown')
+            url = prop.get('property_url', '#')
 
-    property_details += (
-        f"✨ **{name}**\n"
-        f"📍 Location: {locality}\n"
-        f"💰 Price: {price}\n"
-        f"🚦 Status: {status}\n"
-        f"🔗 [More Info]({url})\n\n"
-    )
+            formatted_properties += (
+                f"✨ **{name}**\n"
+                f"📍 Location: {locality}\n"
+                f"💰 Price: {formatted_price(price)}\n"
+                f"🚦 Status: {status}\n"
+                f"🔗 [Visit for More Details:]({url})\n\n"
+            )
 
-    # Personality definitions
-    system_prompts = {
-        "funny": "You're outrageously funny, playful, and use quirky humor and Indian references. Joke about property prices being through the roof!",
-        "cranky": "You're cranky, impatient, and sarcastic. Say things like 'bhai khareedna hai toh batao', showing humorous impatience.",
-        "formal": "You're formal, polite, professional, clear, and helpful."
-    }
+    memory = ""
+    try:
+        with open('memory.txt', 'r') as file:
+            formatted_memory = file.read().strip()
+    except Exception as e:
+        formatted_properties += "Property details unavailable at the moment."
 
-    # Full system prompt with property and memory context
-    full_system_message = (
+    # Enhanced system prompt including memory and property details
+    full_system_prompt = (
         f"{system_prompts.get(personality, 'formal')}\n\n"
-        f"{memory_content}\n\n"
-        f"{property_details}\n"
-        "Use these details specifically to answer queries about properties, prices, and locations."
+        f"Memory Information:\n{open('memory.txt').read()}\n\n"
+        f"Properties Available:\n{formatted_properties}\n\n"
+        f"Use above memory and properties to answer user questions."
     )
 
-    # Append new user message to the chat history
-    chat_history.append({"role": "user", "content": user_message})
-
-    # Complete conversation history sent to OpenAI
-    messages = [{"role": "system", "content": full_system_message}] + chat_history
-
-    response = client.chat.completions.create(
+    # Call GPT-4o model for generating replies
+    response = openai.chat.completions.create(
         model="gpt-4o",
-        messages=messages
+        messages=[
+            {"role": "system", "content": full_system_prompt},
+            {"role": "user", "content": user_message}
+        ]
     )
 
     reply = response.choices[0].message.content
 
-    # Save assistant's response to history
-    chat_history.append({"role": "assistant", "content": reply})
-
     return jsonify({"reply": reply})
+
+def formatted_price(price):
+    if price is None:
+        return "Price not disclosed"
+    else:
+        return f"₹{price:,.0f}"
 
 if __name__ == '__main__':
     app.run(debug=True)
