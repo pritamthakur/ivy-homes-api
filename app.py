@@ -30,14 +30,22 @@ def chat():
 
     properties = fetch_properties()
 
-    property_details = "Available Properties:\n"
-    for prop in properties:
-        name = prop.get('property_title', 'Unnamed')
-        locality = prop['project'].get('locality', 'Unknown locality')
-        price = f"₹{prop['price']}" if prop['price'] else "Price not disclosed"
-        status = prop.get('property_status', 'Status unknown')
-        url = prop.get('property_url', '#')
-        property_details += f"- {name} in {locality}, {price}, Status: {status}. More info: {url}\n"
+    # Prepare formatted property details
+property_details = "🏡 Available Properties:\n\n"
+for prop in properties:
+    name = prop.get('property_title', 'Unnamed')
+    locality = prop['project'].get('locality', 'Unknown locality')
+    price = f"₹{prop['price']:,}" if prop['price'] else "Price not disclosed"
+    status = prop.get('property_status', 'Status unknown')
+    url = prop.get('property_url', '#')
+
+    property_details += (
+        f"✨ **{name}**\n"
+        f"📍 Location: {locality}\n"
+        f"💰 Price: {price}\n"
+        f"🚦 Status: {status}\n"
+        f"🔗 [More Info]({url})\n\n"
+    )
 
     # Personality definitions
     system_prompts = {
