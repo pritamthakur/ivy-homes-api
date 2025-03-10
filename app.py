@@ -7,7 +7,6 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-# Load your OpenAI API key from Render's environment variables
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Load memory content once
@@ -39,14 +38,13 @@ def find_relevant_properties(location, budget, bhk_type):
         if location.lower() in prop_locality and (budget is None or prop_price <= budget) and (bhk_type is None or bhk_type == prop_bhk):
             filtered.append(prop)
 
-    # If no exact matches, find closest location
     if not filtered and location:
         for prop in properties:
             if location.lower().split()[0] in prop.get('project', {}).get('locality', '').lower():
                 filtered.append(prop)
-                break  # Nearest match
+                break
 
-    return filtered[:3]  # Limit to top 3 properties
+    return filtered[:3]
 
 @app.route('/chat', methods=['POST'])
 def chat():
@@ -67,6 +65,7 @@ def chat():
         "3. Type (2BHK/3BHK)?\n\n"
         "If user's requested location isn't available, suggest the nearest location clearly mentioning it.\n\n"
         "Once you clearly have the above 3 details, ONLY THEN suggest properties (max 3) with emojis, formatted neatly, and clickable links.\n\n"
+        "IMPORTANT: Keep your replies concise—no longer than 4-5 sentences, except when you're explicitly listing property options.\n\n"
         f"Recent conversation:\n{conversation}"
     )
 
