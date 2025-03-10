@@ -12,7 +12,6 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 with open("memory.txt", "r") as file:
     memory_content = file.read()
 
-# Global chat history (per deployment - basic implementation)
 chat_history = []
 
 def fetch_properties():
@@ -20,62 +19,55 @@ def fetch_properties():
     response = requests.get(url)
     return response.json().get("data", []) if response.status_code == 200 else []
 
-def format_properties(filtered_props):
-    formatted_props = ""
-    for prop in filtered_props[:5]:
-        name = prop.get('property_title', 'Unnamed')
-        locality = prop.get('project', {}).get('locality', 'Unknown')
-        price = prop.get('price', None)
-        formatted_price = f"₹{price:,.0f}" if price else "Price not disclosed"
-        bhk = prop.get('bedrooms', 'N/A')
-        status = prop.get('property_status', 'Unknown')
-        url = prop.get('property_url', '#')
-
-        formatted_props += (
-            f"🏡 **{name}**\n"
-            f"- 📍 {locality}\n"
-            f"- 🛏️ {bhk} BHK\n"
-            f"- 💰 {formatted_price}\n"
-            f"- 🚦 {status}\n"
-            f"- 🔗 [View details]({url})\n\n"
-        )
-    return formatted_props if formatted_props else "No properties match your criteria."
-
 @app.route('/chat', methods=['POST'])
 def chat():
     data = request.json
     personality = data.get('personality', 'formal')
     user_message = data.get('message')
 
-    properties = fetch_properties()
-
     system_prompts = {
-        "funny": "You're funny, humorous, playful, and outrageous. Use Indian context humor; joke about high prices.",
-        "cranky": "You're cranky, sarcastic, and blunt. Frequently say 'bhai khareedna hai toh batao'.",
-        "formal": "You're polite, professional, and concise."
+        "funny": "You're funny, humorous, playful, outrageous, and use Indian humor about high prices.",
+        "cranky": "You're cranky, sarcastic, blunt, frequently saying 'bhai khareedna hai toh batao'.",
+        "formal": "You're polite, professional, helpful, and concise."
     }
 
-    # Clear instructions for the AI
-    clear_instruction = """
-    Before recommending properties, explicitly confirm the user's:
-    1. Desired Location
-    2. Budget
-    3. Apartment type (2BHK or 3BHK).
+    instruction = (
+        "Before suggesting properties, ALWAYS explicitly confirm the user's:\n"
+        "1. Desired Location\n"
+        "2. Budget\n"
+        "3. Apartment type (2BHK or 3BHK)\n\n"
+        "If any detail is missing, ask clearly for it. Do NOT show property listings until these are confirmed.\n"
+        "Keep replies short (max 4-5 sentences). Use emojis.\n"
+        "Only show property listings AFTER the user confirms all 3 details explicitly."
+    )
 
-    If any detail is missing, ask for it clearly. Always keep replies concise (4-5 sentences maximum) unless providing a property list. Use emojis (📍 for location, 💰 for budget, 🛏️ for bedrooms) and provide markdown clickable links.
-    """
-
-    # Maintain chat history for context
+    # Add the new user message to chat history
     chat_history.append({"role": "user", "content": user_message})
 
-    # Prepare recent conversation history (limit last 8 interactions to control tokens)
-    recent_history = chat_history[-8:]
+    # Check if the user provided all required details explicitly in the history
+    user_details_confirmed = any(
+        all(keyword in msg["content"].lower() for keyword in ["location", "budget", "bhk"])
+        for msg in chat_history if msg["role"] == "assistant"
+    )
 
     messages = [
-        {"role": "system", "content": f"{system_prompts.get(personality, 'formal')}\n\n{clear_instruction}\n\nMemory Info:\n{memory_content}\n"},
-        *recent_history,
-        {"role": "system", "content": f"Properties Data:\n{properties}"}
-    ]
+        {"role": "system", "content": f"{system_prompts.get(personality)}\n\n{instruction}\n\nMemory Info:\n{memory_content}"}
+    ] + chat_history
+
+    # Only add property data if all user details are confirmed
+    if user_details_confirmed:
+        properties = fetch_properties()
+        formatted_properties = "Available properties:\n"
+        for prop in properties[:5]:
+            name = prop.get('property_title', 'Unnamed')
+            locality = prop.get('project', {}).get('locality', 'Unknown')
+            price = prop.get('price', 'Price not disclosed')
+            bhk = prop.get('bedrooms', 'N/A')
+            url = prop.get('property_url', '#')
+            formatted_properties += (
+                f"- 🏡 {name}, 📍 {locality}, 🛏️ {bhk} BHK, 💰 ₹{price:,.0f}, [🔗 details]({url})\n"
+            )
+        messages.append({"role": "system", "content": formatted_properties})
 
     response = openai.chat.completions.create(
         model="gpt-4o",
@@ -84,7 +76,7 @@ def chat():
 
     reply = response.choices[0].message.content
 
-    # Append assistant response to history
+    # Add assistant's reply to the history
     chat_history.append({"role": "assistant", "content": reply})
 
     return jsonify({"reply": reply})
