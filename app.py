@@ -7,16 +7,12 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-def fetch_properties():
-    url = "https://api.ivy.homes/api/v2/properties/?property_status=For%20Sale&property_status=Coming%20Soon"
-    response = requests.get(url)
-    return response.json().get("data", []) if response.status_code == 200 else []
-
-def load_memory():
-    with open("memory.txt", "r") as file:
-        return file.read().strip()
-
+# Load your OpenAI API key from Render's environment variables
 openai.api_key = os.getenv("OPENAI_API_KEY")
+
+# Load memory content once
+with open("memory.txt", "r") as file:
+    memory = file.read().strip()
 
 system_prompts = {
     "funny": "You're funny, humorous, playful, and outrageous. Use Indian context humor; say prices are over the roof!",
@@ -24,41 +20,54 @@ system_prompts = {
     "formal": "You're formal, polite, professional, and helpful."
 }
 
+chat_history = []
+
+def fetch_properties():
+    url = "https://api.ivy.homes/api/v2/properties/?property_status=For%20Sale&property_status=Coming%20Soon"
+    response = requests.get(url)
+    return response.json().get("data", []) if response.status_code == 200 else []
+
+def find_relevant_properties(location, budget, bhk_type):
+    properties = fetch_properties()
+    filtered = []
+
+    for prop in properties:
+        prop_locality = prop.get('project', {}).get('locality', '').lower()
+        prop_price = prop.get('price') or 0
+        prop_bhk = prop.get('bedrooms')
+
+        if location.lower() in prop_locality and (budget is None or prop_price <= budget) and (bhk_type is None or bhk_type == prop_bhk):
+            filtered.append(prop)
+
+    # If no exact matches, find closest location
+    if not filtered and location:
+        for prop in properties:
+            if location.lower().split()[0] in prop.get('project', {}).get('locality', '').lower():
+                filtered.append(prop)
+                break  # Nearest match
+
+    return filtered[:3]  # Limit to top 3 properties
+
 @app.route('/chat', methods=['POST'])
 def chat():
     data = request.json
     personality = data.get('personality', 'formal')
     user_message = data.get('message')
 
-    properties = fetch_properties()
+    chat_history.append({"role": "user", "content": user_message})
 
-    formatted_properties = ""
-    if properties:
-        for prop in properties:
-            name = prop.get('property_title', 'Unnamed Property')
-            locality = prop.get('project', {}).get('locality', 'Unknown location')
-            price = prop.get('price')
-            formatted_price = f"₹{price:,.0f}" if price else "Price not disclosed"
-            status = prop.get('property_status', 'Unknown status')
-            url = prop.get('property_url', '#')
-
-            formatted_properties += (
-                f"🏡 {name}\n"
-                f"📍 Location: {locality}\n"
-                f"💰 Price: {formatted_price}\n"
-                f"🚦 Status: {status}\n"
-                f"🔗 View details: {url}\n\n"
-            )
-    else:
-        formatted_properties = "Currently, no properties are available."
-
-    memory = load_memory()
+    conversation = "\n".join([f"{msg['role']}: {msg['content']}" for msg in chat_history[-6:]])
 
     full_system_prompt = (
         f"{system_prompts.get(personality, 'formal')}\n\n"
-        f"Memory Information:\n{memory}\n\n"
-        f"Properties Available:\n{formatted_properties}\n\n"
-        "Use the above memory and property details to answer user questions clearly, including emojis and clickable links."
+        f"Memory:\n{memory}\n\n"
+        "ALWAYS clearly ask user for these details BEFORE suggesting properties:\n"
+        "1. Desired Location?\n"
+        "2. Budget?\n"
+        "3. Type (2BHK/3BHK)?\n\n"
+        "If user's requested location isn't available, suggest the nearest location clearly mentioning it.\n\n"
+        "Once you clearly have the above 3 details, ONLY THEN suggest properties (max 3) with emojis, formatted neatly, and clickable links.\n\n"
+        f"Recent conversation:\n{conversation}"
     )
 
     response = openai.chat.completions.create(
@@ -70,6 +79,7 @@ def chat():
     )
 
     reply = response.choices[0].message.content
+    chat_history.append({"role": "assistant", "content": reply})
 
     return jsonify({"reply": reply})
 
